@@ -1,0 +1,18 @@
+#!/usr/bin/env perl
+use warnings;
+use strict;
+use oCLI;
+use oCLI::Context;
+use oCLI::Dispatch;
+use oCLI::Request;
+
+
+# my $payload = oCLI::_process_command_line( @ARGV );
+
+my $request = oCLI::Request->new_from_command_line( @ARGV );
+my $context = oCLI::Context->new( req => $request );
+
+my $dispatch = oCLI::Dispatch->new( root => 'oCLI::Command' );
+
+print $dispatch->dispatch( $context );
+
