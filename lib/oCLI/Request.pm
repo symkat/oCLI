@@ -2,28 +2,8 @@ package oCLI::Request;
 use Moo;
 use Scalar::Util qw( looks_like_number );
 
-has overrides => (
+has [qw( overrides command args settings stdin )] => (
     is => 'ro',
-);
-
-has command => (
-    is => 'ro',
-
-);
-
-has args => (
-    is => 'ro',
-
-);
-
-has settings => (
-    is      => 'rw',
-    default => sub { +{} },
-);
-
-has stdin => (
-    is => 'ro',
-
 );
 
 has command_class => (
@@ -50,33 +30,6 @@ has command_name => (
         return lc( (split( /:/, $self->command ))[-1] );
     }
 );
-
-# has rules => (
-#     is => 'ro',
-#     default => sub {
-#         return +{
-#             def     => sub { defined $_[0] ? $_[0] : $_[1] },
-#             defined => sub { defined $_[0] or die "Error: Setting not defined" },
-#             num     => sub { looks_like_number($_[0] or die "Error: Setting is not a number.") },
-#             gte     => sub { $_[0] >= $_[1] or die "Error: Setting must be a number greater than or equal to $_[1]" },
-#             lte     => sub { $_[0] <= $_[1] or die "Error: Setting must be a number less than or equal to $_[1]" },
-#         };
-#     }
-# );
-
-# sub validate_settings {
-#     my ( $self, @in ) = @_;
-
-#      while ( my $setting = shift @in ) {
-#         my $meta  = shift @in;
-#         my $tests = $meta->[0];
-        
-#         foreach my $test ( @$tests ) {
-#             my ( $name, $value ) = split( /=/, $test );
-#             $self->settings->{$setting} = $self->rules->{$name}->( $self->settings->{$setting}, $value );
-#         }
-#     }
-# }
 
 sub new_from_command_line {
     my ( $class, @command_line ) = @_;

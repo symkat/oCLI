@@ -45,98 +45,48 @@ my $tests = [
         line => __LINE__,
     },
 
-    #-- 
-
     {
         in   => [ qw( server --foo ) ],
         out  => { command => 'server', setting => { foo => 1 } },
-        desc => 'Settings',
-        line => __LINE__,
-    },
-    
-    {
-        in   => [ qw( server --foo ) ],
-        out  => { command => 'server', setting => { foo => 1 } },
-        desc => 'Settings',
+        desc => 'Setting with no value is a true bool',
         line => __LINE__,
     },
     
     {
         in   => [ qw( server --foo --bar blee) ],
         out  => { command => 'server', setting => { foo => 1, bar => 'blee' } },
-        desc => 'Settings',
+        desc => 'Settings with an argument',
         line => __LINE__,
     },
     
     {
         in   => [ qw( server --foo --bar blee --bar baz) ],
         out  => { command => 'server', setting => { foo => 1, bar => [ 'blee', 'baz' ] } },
-        desc => 'Settings',
+        desc => 'Settings with multiple arguments become an array ref',
         line => __LINE__,
     },
     
     {
         in   => [ qw( server --foo --bar blee --bar baz --no-bat) ],
         out  => { command => 'server', setting => { foo => 1, bar => [ 'blee', 'baz' ], bat => 0 } },
-        desc => 'Settings',
+        desc => 'Setting prefixed with --no- is a false bool',
         line => __LINE__,
     },
-    
-    #--
     
     {
         in   => [ qw( server:create bar --foo ) ],
         out  => { command => 'server:create', setting => { foo => 1 }, args => [ 'bar' ] },
-        desc => 'Settings',
+        desc => 'Positional Arguments',
         line => __LINE__,
     },
     
     {
         in   => [ qw( server:create bar blee --foo ) ],
         out  => { command => 'server:create', setting => { foo => 1 }, args => [ 'bar', 'blee' ] },
-        desc => 'Settings',
+        desc => 'Positional Arguments followed by settings',
         line => __LINE__,
     },
 
-    #-- 
-
-    {
-        in   => [ qw( server:create --foo ) ],
-        out  => { command => 'server:create', setting => { foo => 1 } },
-        desc => 'Settings',
-        line => __LINE__,
-    },
-    
-    {
-        in   => [ qw( server:create --foo --bar blee) ],
-        out  => { command => 'server:create', setting => { foo => 1, bar => 'blee' } },
-        desc => 'Settings',
-        line => __LINE__,
-    },
-    
-    {
-        in   => [ qw( server:create --foo --bar blee --bar baz) ],
-        out  => { command => 'server:create', setting => { foo => 1, bar => [ 'blee', 'baz' ] } },
-        desc => 'Settings',
-        line => __LINE__,
-    },
-    
-    {
-        in   => [ qw( server:create --foo --bar blee --bar baz --no-bat) ],
-        out  => { command => 'server:create', setting => { foo => 1, bar => [ 'blee', 'baz' ], bat => 0 } },
-        desc => 'Settings',
-        line => __LINE__,
-    },
-    
-    {
-        in    => [ qw( server:create --foo --bar blee --bar baz --no-bat) ],
-        out   => { command => 'server:create', setting => { foo => 1, bar => [ 'blee', 'baz' ], bat => 0 } },
-        desc  => 'Settings',
-        line  => __LINE__,
-    },
-
-
-    #-- 
     {
         in   => [qw( /foo /bar=10 /baz=10.5 /bing=bar /foo=bar server:create --minus - --neg -5 --foo --bar blee --bar baz --no-bat )],
         out  => { 
@@ -144,11 +94,9 @@ my $tests = [
             command => 'server:create',
             setting => { foo => 1, bar => [ 'blee', 'baz' ], bat => 0, minus => '-', neg => -5 }  
         },
-        desc => "Override",
+        desc => "Various forms of - and -n as setting values.",
         line => __LINE__,
     },
-
-    #-- File expansion in @file arguments
 
     {
         in   => [qw( /foo /bar=10 /baz=10.5 /bing=bar /foo=bar server:create bar @t/etc/data --foo --bar blee --bar baz --no-bat )],
@@ -158,11 +106,10 @@ my $tests = [
             args     => [ 'bar', "I am a data file.\nI have two lines.\n" ],
             setting  => { foo => 1, bar => [ 'blee', 'baz' ], bat => 0 },
         },
-        desc => "Data Expansion in arguments",
+        desc => 'Data expansion in arguments with @filename',
         line => __LINE__,
     },
     
-    #-- Data file
     {
         in   => [qw( /foo /bar=10 /baz=10.5 /bing=bar /foo=bar server:create bar blee --foo --bar blee --bar baz --no-bat --data @t/etc/data )],
         out  => { 
@@ -171,11 +118,10 @@ my $tests = [
             args     => [ 'bar', 'blee' ],
             setting  => { foo => 1, bar => [ 'blee', 'baz' ], bat => 0, data => "I am a data file.\nI have two lines.\n" },
         },
-        desc => "Override",
+        desc => 'Data expansion in settings with @filename',
         line => __LINE__,
     },
-    
-    #-- STDIN
+
     {
         in   => [qw( /foo /bar=10 /baz=10.5 /bing=bar /foo=bar server:create bar blee --foo --bar blee --bar baz --no-bat --data @t/etc/data )],
         out  => { 
@@ -185,7 +131,7 @@ my $tests = [
             setting  => { foo => 1, bar => [ 'blee', 'baz' ], bat => 0, data => "I am a data file.\nI have two lines.\n" },
             stdin    => "I am from STDIN.\nI have two lines.\n"
         },
-        desc => "Override",
+        desc => "Process standard input",
         line => __LINE__,
         stdin   => "I am from STDIN.\nI have two lines.\n"
     },
@@ -202,13 +148,16 @@ foreach my $test ( @{$tests} ) {
         *STDIN = $sf;
     }
 
-    my $cmd = oCLI::Request_process_command_line( @{$test->{in}} );
+    my $obj = oCLI::Request->new_from_command_line( @{$test->{in}} );
 
     # Handle bug in STDIN between "" and undef under test_harness, vs prove
-    is ( delete $cmd->{stdin} || "", delete $test->{out}{stdin} || "", sprintf( "Line %d: %s", $test->{line}, $test->{desc}));
+    is ( $obj->stdin || "", delete $test->{out}{stdin} || "", sprintf( "Line %d: %s", $test->{line}, $test->{desc}));
 
     # Normal CDS testing
-    is_deeply( $cmd, $test->{out}, sprintf( "Line %d: %s", $test->{line}, $test->{desc}) );
+    is_deeply( $obj->overrides, $test->{out}->{override}, sprintf( "Line %d: %s", $test->{line}, $test->{desc}) );
+    is_deeply( $obj->command,   $test->{out}->{command}, sprintf( "Line %d: %s", $test->{line}, $test->{desc}) );
+    is_deeply( $obj->args,      $test->{out}->{args}, sprintf( "Line %d: %s", $test->{line}, $test->{desc}) );
+    is_deeply( $obj->settings,  $test->{out}->{setting}, sprintf( "Line %d: %s", $test->{line}, $test->{desc}) );
 
     # Reset STDIN if we stuffed it.
     *STDIN = $stdin if $test->{stdin};

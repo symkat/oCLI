@@ -1,3 +1,4 @@
+# ABSTRACT: Opinionated Command Line Interface
 package oCLI;
 use Moo;
 use Import::Into;
