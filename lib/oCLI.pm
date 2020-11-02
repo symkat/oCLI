@@ -87,12 +87,19 @@ sub render {
     $view->render($c);
 }
 
+sub config {
+
+}
+
 sub model {
-    my ( $class, $name, %args ) = @_;
+    my ( $class, $name, $data ) = @_;
 
     my $stash = (Package::Stash->new($class)->get_symbol('%stash'));
 
-    $stash->{model}->{$name} = { %args };
+    $stash->{model}->{$name} = { 
+        name => $name,
+        %{$data},
+    };
     
     return;
 }

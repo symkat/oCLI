@@ -17,9 +17,19 @@ has rules => (
 sub before_code {
     my ( $self, $c, $d ) = @_;
 
-    $c->trace( "Running validate settings..." );
-    $self->validate_settings( $c, @{$d->{settings}} )
-        if $d->{settings};
+    if ( $d->{settings} ) {
+        $c->trace( "Running settings validation." );
+        $self->validate_settings( $c, @{$d->{settings}} );
+    } else {
+        $c->trace( "No settings found -- skipping validation." );
+    }
+    
+    if ( $d->{args} ) {
+        $c->trace( "Running positional argument validation." );
+        $self->validate_arguments( $c, @{$d->{args}} );
+    } else {
+        $c->trace( "No positional arguments found -- skipping validation." );
+    }
 
     return $c;
 }
@@ -29,13 +39,6 @@ sub after_code {
 
     return $c;
 }
-
-
-
-
-
-
-
 
 # Settings is an arrayref, we set the structure via @in
 #
@@ -100,6 +103,50 @@ sub validate_settings {
                 unless defined $self->rules->{$test};
 
             $c->req->settings->{$setting} = $self->rules->{$test}->($c, $setting, $c->req->settings->{$setting});
+        }
+    }
+}
+
+# TODO: Let's write this out as a duplication with the changes we need to apply to positional arguments,
+#       leave everything else largely the same, and then later look at this again and then refactor it
+#       on another pass later.
+
+sub validate_arguments {
+    my ( $self, $c, @in ) = @_;
+
+
+    while ( defined ( my $pos = shift @in ) ) {
+        $c->trace("Checking argument $pos\n");
+
+        if ( ref($in[0]) ne 'ARRAY' ) {
+            die "Error: Expected next argument to be arrayref.";
+        }
+
+        my $meta = shift @in;
+        
+        foreach my $test ( @{$meta->[0]} ) {
+            if ( ref($test) eq 'CODE' ) {
+                $c->trace("Running validation code block.");
+                $c->req->args->{$pos} = $test->($c, $setting, $c->req->settings->{$setting});
+                next;
+            }
+
+            if ( index($test, '=') != -1 ) {
+                my ( $function, $value ) = split(/=/, $test, 2);
+                $c->trace("Running validation function $function with user-supplied value $value.");
+
+                die "Error: unknown function $function called in validation."
+                    unless defined $self->rules->{$function};
+                $c->req->settings->{$setting} = $self->rules->{$function}->($c, $setting, $c->req->settings->{$setting}, $value );
+                next;
+            }
+
+            # Last case, a bare function name.
+            die "Error: unknown function $test called in validation."
+                unless defined $self->rules->{$test};
+
+            $c->req->settings->{$setting} = $self->rules->{$test}->($c, $setting, $c->req->settings->{$setting});
+        
         }
     }
 }

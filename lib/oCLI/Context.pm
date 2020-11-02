@@ -26,18 +26,31 @@ has root => (
 sub trace {
     my ( $self, $message ) = @_;
 
+    my ( $package, $filename, $line ) = caller;
     if ( exists $self->req->{overrides}->{trace} ) {
-        print "TRACE> $message\n";
+        print "TRACE[$package:$line]> $message\n";
     }
 }
 
 sub model {
     my ( $self, $name ) = @_;
 
-    return $self->{model}->{$name}
-        if exists $self->{model}->{$name};
+
+    if ( exists $self->{model}->{name} ) {
+        $self->trace("model($name) requested and memoized object returned.");
+        return $self->{model}->{name};
+    }
+
+    $self->trace("Initial request for model($name)");
 
     my $stash = (Package::Stash->new( $self->root )->get_symbol('%stash'));
+
+    # Inject context into arguments if context is set.
+    if ( exists $stash->{model}{$name}{context} ) {
+        die "Can only inject context argument into hash style arguments."
+            if ref($stash->{model}{$name}{args}) ne 'HASH';
+        $stash->{model}{$name}{args}{$stash->{model}{$name}{context}} = $self;
+    }
 
     if ( exists $stash->{model}->{$name} ) {
         return use_module( $stash->{model}->{$name}->{class} )->new( 
@@ -52,6 +65,5 @@ sub model {
     }
 
 }
-
 
 1;

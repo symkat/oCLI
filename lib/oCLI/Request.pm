@@ -2,8 +2,18 @@ package oCLI::Request;
 use Moo;
 use Scalar::Util qw( looks_like_number );
 
-has [qw( overrides command args settings stdin )] => (
+has [qw( overrides command stdin )] => (
     is => 'ro',
+);
+
+has args => (
+    is      => 'ro',
+    default => sub { return [] },
+);
+
+has settings => (
+    is      => 'ro',
+    default => sub { return +{} },
 );
 
 has command_class => (

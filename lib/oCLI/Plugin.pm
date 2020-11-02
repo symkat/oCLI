@@ -25,21 +25,9 @@ sub hook_after_code {
     my ( $self, $c ) = @_;
     
     foreach my $plugin ( @{$self->plugins} ) {
-        $plugin->before_code($c);
+        $plugin->after_code($c);
     }
     return;
-}
-
-sub before_code {
-    my ( $self, $c, $command ) = @_;
-
-    return $c;
-}
-
-sub after_code {
-    my ( $self, $c ) = @_;
-
-    return $c;
 }
 
 1;
