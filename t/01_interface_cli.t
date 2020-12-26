@@ -7,68 +7,68 @@ use oCLI::Request;
 my $tests = [
     {
         in   => [qw( /foo )],
-        out  => { override => { foo => 1 } },
+        out  => { override => { foo => 1 }, args => [], setting => {} },
         desc => "Override: No argument results in 1 ",
         line => __LINE__,
     },
     {
         in   => [qw( /foo /bar=10 )],
-        out  => { override => { foo => 1, bar => 10 } },
+        out  => { override => { foo => 1, bar => 10 }, args => [], setting => {} },
         desc => "Override: Numerical value assignment",
         line => __LINE__,
     },
     {
         in   => [qw( /foo /bar=10 /baz=10.5 )],
-        out  => { override => { foo => 1, bar => 10, baz => 10.5} },
+        out  => { override => { foo => 1, bar => 10, baz => 10.5}, args => [], setting => {} },
         desc => "Override: Floating point numerical value assignment",
         line => __LINE__,
     },
     
     {
         in   => [qw( /foo /bar=10 /baz=10.5 /bing=bar )],
-        out  => { override => { foo => 1, bar => 10, baz => 10.5, bing => 'bar' } },
+        out  => { override => { foo => 1, bar => 10, baz => 10.5, bing => 'bar' }, args => [], setting => {} },
         desc => "Override: string assignment",
         line => __LINE__,
     },
     
     {
         in   => [qw( /foo /bar=10 /baz=10.5 /bing=bar /foo=bar )],
-        out  => { override => { foo => "bar", bar => 10, baz => 10.5, bing => 'bar' } },
+        out  => { override => { foo => "bar", bar => 10, baz => 10.5, bing => 'bar' }, args => [], setting => {} },
         desc => "Override: Later assignments overwrite earlier",
         line => __LINE__,
     },
     
     {
         in   => [qw( /foo /bar=10 ), '/blee=foo bar'],
-        out  => { override => { foo => 1, bar => 10, blee => 'foo bar' } },
+        out  => { override => { foo => 1, bar => 10, blee => 'foo bar' }, args => [], setting => {} },
         desc => "Override: token value can have spaces ",
         line => __LINE__,
     },
 
     {
         in   => [ qw( server --foo ) ],
-        out  => { command => 'server', setting => { foo => 1 } },
+        out  => { command => 'server', setting => { foo => 1 }, args => [] },
         desc => 'Setting with no value is a true bool',
         line => __LINE__,
     },
     
     {
         in   => [ qw( server --foo --bar blee) ],
-        out  => { command => 'server', setting => { foo => 1, bar => 'blee' } },
+        out  => { command => 'server', setting => { foo => 1, bar => 'blee' }, args => [ ] },
         desc => 'Settings with an argument',
         line => __LINE__,
     },
     
     {
         in   => [ qw( server --foo --bar blee --bar baz) ],
-        out  => { command => 'server', setting => { foo => 1, bar => [ 'blee', 'baz' ] } },
+        out  => { command => 'server', setting => { foo => 1, bar => [ 'blee', 'baz' ] }, args => [ ] },
         desc => 'Settings with multiple arguments become an array ref',
         line => __LINE__,
     },
     
     {
         in   => [ qw( server --foo --bar blee --bar baz --no-bat) ],
-        out  => { command => 'server', setting => { foo => 1, bar => [ 'blee', 'baz' ], bat => 0 } },
+        out  => { command => 'server', setting => { foo => 1, bar => [ 'blee', 'baz' ], bat => 0 }, args => [ ] },
         desc => 'Setting prefixed with --no- is a false bool',
         line => __LINE__,
     },
@@ -92,7 +92,8 @@ my $tests = [
         out  => { 
             override => { foo => "bar", bar => 10, baz => 10.5, bing => 'bar' }, 
             command => 'server:create',
-            setting => { foo => 1, bar => [ 'blee', 'baz' ], bat => 0, minus => '-', neg => -5 }  
+            setting => { foo => 1, bar => [ 'blee', 'baz' ], bat => 0, minus => '-', neg => -5 },
+            args    => [ ],
         },
         desc => "Various forms of - and -n as setting values.",
         line => __LINE__,
@@ -154,10 +155,10 @@ foreach my $test ( @{$tests} ) {
     is ( $obj->stdin || "", delete $test->{out}{stdin} || "", sprintf( "Line %d: %s", $test->{line}, $test->{desc}));
 
     # Normal CDS testing
-    is_deeply( $obj->overrides, $test->{out}->{override}, sprintf( "Line %d: %s", $test->{line}, $test->{desc}) );
-    is_deeply( $obj->command,   $test->{out}->{command}, sprintf( "Line %d: %s", $test->{line}, $test->{desc}) );
-    is_deeply( $obj->args,      $test->{out}->{args}, sprintf( "Line %d: %s", $test->{line}, $test->{desc}) );
-    is_deeply( $obj->settings,  $test->{out}->{setting}, sprintf( "Line %d: %s", $test->{line}, $test->{desc}) );
+    is_deeply( $obj->overrides, $test->{out}->{override}, sprintf( "[Overrides] Line %d: %s", $test->{line}, $test->{desc}) );
+    is_deeply( $obj->command,   $test->{out}->{command}, sprintf( "[Command] Line %d: %s", $test->{line}, $test->{desc}) );
+    is_deeply( $obj->args,      $test->{out}->{args}, sprintf( "[Args] Line %d: %s", $test->{line}, $test->{desc}) );
+    is_deeply( $obj->settings,  $test->{out}->{setting}, sprintf( "[Settings] Line %d: %s", $test->{line}, $test->{desc}) );
 
     # Reset STDIN if we stuffed it.
     *STDIN = $stdin if $test->{stdin};
