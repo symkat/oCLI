@@ -3,19 +3,26 @@ use Moo;
 use Storable qw( dclone );
 use Scalar::Util qw( looks_like_number );
 
+# Enable code references in dclone so that our validation code
+# refs don't result in "Can't store CODE items at"
+# https://metacpan.org/pod/release/AMS/Storable-2.21/Storable.pm#CODE-REFERENCES
+$Storable::Deparse = 1;
+$Storable::Eval    = 1;
+
 has tests => (
     is => 'ro',
     default => sub {
         return +{
             def     => sub { defined $_[2] ? $_[2] : $_[3] },
-            defined => sub { defined $_[2] or die "Error: --$_[1] was expected.\n" },
-            num     => sub { looks_like_number($_[2] or die "Error: --$_[1] expects a number.\n") },
-            gte     => sub { $_[2] >= $_[3] or die "Error: --$_[1] must be a number greater than or equal to $_[3]" },
-            lte     => sub { $_[2] <= $_[3] or die "Error: --$_[1] must be a number less than or equal to $_[3]" },
+            defined => sub { defined $_[2] or die "Error: --$_[1] was expected.\n"; $_[2] },
+            num     => sub { looks_like_number($_[2] or die "Error: --$_[1] expects a number.\n"); $_[2] },
+            gte     => sub { $_[2] >= $_[3] or die "Error: --$_[1] must be a number greater than or equal to $_[3]"; $_[2] },
+            lte     => sub { $_[2] <= $_[3] or die "Error: --$_[1] must be a number less than or equal to $_[3]"; $_[2] },
         };
     }
 );
 
+sub after_context { }
 
 # This function is run before the code reference is called.
 #

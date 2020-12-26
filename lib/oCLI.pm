@@ -21,16 +21,26 @@ sub import {
 
 sub run {
     my ( $self, @in ) = @_;
-    
+
+
     my $req = oCLI::Request->new_from_command_line( @in );
-    
+
     my $c = oCLI::Context->new( req => $req, root => $self->root );
     
+    # Load Plugins
+    my $info  = (Package::Stash->new($self->root)->get_symbol('%stash'));
+    foreach my $plugin ( @{$info->{plugins}} ) {
+        $c->trace( "Loading plugin $plugin" );
+        $c->plugin->add( use_module( $plugin )->new );
+    }
+    
+    $c->plugin->hook_after_context( $c );
+
     use Data::Dumper;
     $c->trace("Entering oCLI::Dispatch::dispatch");
     $c->trace("Processing The Following Request:" );
-    $c->req->command_class;
-    $c->req->command_name;
+    $c->trace( $c->req->command_class );
+    $c->trace( $c->req->command_name );
     $c->trace(Dumper($c->req) );
 
     # Load Command Class.
@@ -46,17 +56,11 @@ sub run {
         $c->trace("Failed to load module in oCLI::Dispatch::dispatch");
         die "Error: Failed to load command class: $_\n";
     };
-    
+
     # Load Code
     my $stash = (Package::Stash->new(ref($controller))->get_symbol('%stash'));
-    my $info  = (Package::Stash->new($self->root)->get_symbol('%stash'));
     my $command  = $stash->{command}->{$c->req->command_name};
 
-    # Load Plugins
-    foreach my $plugin ( @{$info->{plugins}} ) {
-        $c->trace( "Loading plugin $plugin" );
-        $c->plugin->add( use_module( $plugin )->new );
-    }
 
     $c->plugin->hook_before_code( $c, $command );
 
@@ -64,9 +68,9 @@ sub run {
     $c->trace(Dumper($c->req) );
 
     $command->{code}->( $self, $c );
-    
+
     $c->plugin->hook_after_code($c);
-    
+
     $self->render($c)
         unless $c->req->overrides->{quiet};
 
@@ -100,7 +104,7 @@ sub model {
         name => $name,
         %{$data},
     };
-    
+
     return;
 }
 

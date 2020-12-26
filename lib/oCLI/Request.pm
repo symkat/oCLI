@@ -102,7 +102,7 @@ sub new_from_command_line {
             } else {
                 $argument = shift @command_line;
             }
-            
+
             if ( substr($argument,0,1) eq '@' ) {
                 open my $lf, "<", substr($argument,1)
                     or die "Failed to read $argument: $!";
@@ -126,7 +126,7 @@ sub new_from_command_line {
     # Process STDIN
     if ( ! -t STDIN ) {
         $data->{stdin} = do { local $/; <STDIN> };
-    }  
+    }
 
     return $class->new($data);
 }

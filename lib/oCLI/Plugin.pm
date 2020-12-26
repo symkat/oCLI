@@ -12,6 +12,15 @@ sub add {
     push @{$self->plugins}, $plugin;
 }
 
+sub hook_after_context {
+    my ( $self, $c ) = @_;
+    
+    foreach my $plugin ( @{$self->plugins} ) {
+        $plugin->after_context($c);
+    }
+    return;
+}
+
 sub hook_before_code {
     my ( $self, $c, $command ) = @_;
     
@@ -29,5 +38,6 @@ sub hook_after_code {
     }
     return;
 }
+
 
 1;
