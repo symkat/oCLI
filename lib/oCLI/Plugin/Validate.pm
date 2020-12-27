@@ -16,8 +16,10 @@ has tests => (
             def     => sub { defined $_[2] ? $_[2] : $_[3] },
             defined => sub { defined $_[2] or die "Error: --$_[1] was expected.\n"; $_[2] },
             num     => sub { looks_like_number($_[2] or die "Error: --$_[1] expects a number.\n"); $_[2] },
-            gte     => sub { $_[2] >= $_[3] or die "Error: --$_[1] must be a number greater than or equal to $_[3]"; $_[2] },
-            lte     => sub { $_[2] <= $_[3] or die "Error: --$_[1] must be a number less than or equal to $_[3]"; $_[2] },
+            gte     => sub { $_[2] >= $_[3] or die "Error: --$_[1] must be a number greater than or equal to $_[3].\n"; $_[2] },
+            lte     => sub { $_[2] <= $_[3] or die "Error: --$_[1] must be a number less than or equal to $_[3].\n"; $_[2] },
+            min     => sub { length($_[2]) >= $_[3] or die "Error: --$_[1] must be a string longer than $_[3] characters.\n"; $_[2] },
+            max     => sub { length($_[2]) <= $_[3] or die "Error: --$_[1] must be a string shorter than $_[3] characters.\n"; $_[2] },
         };
     }
 );

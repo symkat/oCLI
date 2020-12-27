@@ -9,7 +9,15 @@ use oCLI::Plugin;
 use Module::Runtime qw( use_module );
 use Try::Tiny;
 
-has root => ( is => 'ro' );
+has root => (
+    is => 'ro'
+);
+
+has render_root => (
+    is => 'ro',
+    lazy => 1,
+    default => sub { shift->root },
+);
 
 sub import {
     my ( $class, @plugins ) = @_;
@@ -83,7 +91,7 @@ sub render {
     # Load View Class.
     $c->stash->{view} ||= 'Text';
     my $view = try {
-        use_module( $self->root . '::View::' . $c->stash->{view} )->new;
+        use_module( $self->render_root . '::View::' . $c->stash->{view} )->new;
     } catch {
         die "Error: Failed to render command class: $_\n";
     };
