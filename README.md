@@ -1,7 +1,7 @@
-# oCLI
+# NAME
 
-## Execution Overview
+oCLI - Opinionated Command Line Interface
 
-## Writing A Command
+# DESCRIPTION
 
-## Plugin System
+This is an early version of an Command Line Interface framework.  It needs more documenting.
